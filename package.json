@@ -1,0 +1,19 @@
+{
+  "name": "buzztracker-backend",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --minify",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings"
+  },
+  "dependencies": {
+    "@hono/zod-validator": "^0.4.1",
+    "bcrypt": "^5.1.1",
+    "hono": "^4.6.4",
+    "node-appwrite": "^14.1.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241011.0",
+    "@types/bcrypt": "^5.0.2",
+    "wrangler": "^3.79.0"
+  }
+}
