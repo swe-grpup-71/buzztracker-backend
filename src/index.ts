@@ -3,18 +3,20 @@ import { z } from 'zod'
 import { zValidator } from '@hono/zod-validator'
 import signin from './services/signin'
 import { DB } from './database'
+import signup from './services/signup'
+import resetPassword from './services/resetPassword'
 
 export type Env = {
   Bindings: CloudflareBindings
   Variables: {
-      db: DB
+    db: DB
   }
 }
 
 const appFactory = createFactory<Env>({
   initApp: (app) => {
     app.use(async (c, next) => {
-      const db = new DB(c.env.APPWRITE_API_SECRET, c.env.APPWRITE_PROJECT_ID, c.env.APPWRITE_DATABASE_ID)
+      const db = new DB(c.env.GOOGLE_CLOUD_PROJECT_ID, c.env.GOOGLE_CLOUD_SERVICE_ACCOUNT)
       c.set('db', db)
       await next()
     })
@@ -27,11 +29,34 @@ user.post(
   zValidator(
     'json',
     z.object({
-      email: z.string().email(),
+      username: z.string().min(1),
       password: z.string().min(8)
     })
   ),
   signin
+)
+user.post(
+  '/signup',
+  zValidator(
+    'json',
+    z.object({
+      username: z.string().min(1),
+      email: z.string().email(),
+      password: z.string().min(8)
+    })
+  ),
+  signup
+)
+user.post(
+  '/reset-password',
+  zValidator(
+    'json',
+    z.object({
+      email: z.string().email(),
+      recoveryToken: z.string().length(32)
+    })
+  ),
+  resetPassword
 )
 
 const app = appFactory.createApp()

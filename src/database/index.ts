@@ -1,44 +1,48 @@
-import { Client, Databases, Query } from "node-appwrite";
+import { SignJWT, importPKCS8 } from 'jose';
+import { Database } from 'firebase-firestore-lite';
 
 export class DB {
-    private client: Client;
-    private database_id: string = "";
+  public client: Database
+  private token: string = ''
 
-    constructor(api_secret: string, project_id: string, database_id: string) {
-        this.client = new Client()
-            .setEndpoint('https://cloud.appwrite.io/v1')
-            .setProject(project_id)
-            .setKey(api_secret)
-        this.database_id = database_id
-    }
-
-    async collection(search: string): Promise<string> {
-        const databases = new Databases(this.client)
-        const result = await databases.listCollections(this.database_id, [], search)
-        if (result.total === 0) {
-            throw new Error(`Collection ${search} not found`)
+  constructor(project_id: string, service_account: string) {
+    const serviceAccount = JSON.parse(service_account)
+    const that = this
+    this.client = new Database({
+      projectId: project_id,
+      auth: {
+        /**
+        * Uses native fetch, but adds authorization headers, otherwise, the API is exactly the same as native fetch.
+        * @param {Request|Object|string} resource A request to send. It can be a resource or an options object.
+        * @param {Object} init An options object.
+        */
+        authorizedRequest: async (resource, init) => {
+          const request = resource instanceof Request ? resource : new Request(resource, init);
+          const token = this.token || await that.generateToken(serviceAccount);
+          request.headers.set('Authorization', `Bearer ${token}`);
+          return fetch(request);
         }
-        if (result.total > 1) {
-            throw new Error(`Multiple collections found for ${search}`)
-        }
-        return result.collections[0].$id
-    }
+      }
+    })
+  }
 
-    async findDocuments(collection_id: string, queries: string[], offset: number, limit: number): Promise<any> {
-        const databases = new Databases(this.client)
-        return await databases.listDocuments(
-            this.database_id,
-            collection_id,
-            [
-                ...queries,
-                Query.limit(limit),
-                Query.offset(offset)
-            ]
-        )
-    }
-
-    async getDocument(collection_id: string, document_id: string): Promise<any> {
-        const databases = new Databases(this.client)
-        return await databases.getDocument(this.database_id, collection_id, document_id)
-    }
+  private async generateToken(serviceAccount: any): Promise<string> {
+    const now = Math.floor(Date.now() / 1000);
+    const key = await importPKCS8(serviceAccount.private_key, 'RS256');
+    const token = await new SignJWT({
+      iss: serviceAccount.client_email,
+      sub: serviceAccount.client_email,
+      aud: 'https://firestore.googleapis.com/',
+      iat: now,
+      exp: now + 3600
+    })
+      .setProtectedHeader({
+          alg: "RS256",
+          typ: "JWT",
+          kid: serviceAccount.private_key_id,
+      })
+      .sign(key);
+    this.token = token
+    return token
+  }
 }
