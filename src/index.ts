@@ -1,10 +1,9 @@
-import { createFactory } from 'hono/factory'
-import { z } from 'zod'
-import { zValidator } from '@hono/zod-validator'
-import signin from './services/signin'
+import { swaggerUI } from '@hono/swagger-ui'
+import { OpenAPIHono } from '@hono/zod-openapi'
 import { DB } from './database'
-import signup from './services/signup'
-import resetPassword from './services/resetPassword'
+import { signinRoute, signin } from './services/signin'
+import { signupRoute, signup } from './services/signup'
+import { resetPasswordRoute, resetPassword } from './services/resetPassword'
 
 export type Env = {
   Bindings: CloudflareBindings
@@ -13,52 +12,26 @@ export type Env = {
   }
 }
 
-const appFactory = createFactory<Env>({
-  initApp: (app) => {
-    app.use(async (c, next) => {
-      const db = new DB(c.env.GOOGLE_CLOUD_PROJECT_ID, c.env.GOOGLE_CLOUD_SERVICE_ACCOUNT)
-      c.set('db', db)
-      await next()
-    })
-  },
+const app = new OpenAPIHono<Env>()
+app.use(async (c, next) => {
+  const db = new DB(c.env.GOOGLE_CLOUD_PROJECT_ID, c.env.GOOGLE_CLOUD_SERVICE_ACCOUNT)
+  c.set('db', db)
+  await next()
 })
 
-const user = appFactory.createApp()
-user.post(
-  '/signin',
-  zValidator(
-    'json',
-    z.object({
-      username: z.string().min(1),
-      password: z.string().min(8)
-    })
-  ),
-  signin
-)
-user.post(
-  '/signup',
-  zValidator(
-    'json',
-    z.object({
-      username: z.string().min(1),
-      email: z.string().email(),
-      password: z.string().min(8)
-    })
-  ),
-  signup
-)
-user.post(
-  '/reset-password',
-  zValidator(
-    'json',
-    z.object({
-      email: z.string().email(),
-      recoveryToken: z.string().length(32)
-    })
-  ),
-  resetPassword
-)
+const user = new OpenAPIHono<Env>()
+user.openapi(signinRoute, signin)
+user.openapi(signupRoute, signup)
+user.openapi(resetPasswordRoute, resetPassword)
 
-const app = appFactory.createApp()
+app.get('/', swaggerUI({ url: '/doc' }))
+app.doc('/doc', {
+  info: {
+    title: 'Buzztracker API',
+    version: 'v1'
+  },
+  openapi: '3.1.0'
+})
 app.route('/user', user)
+
 export default app

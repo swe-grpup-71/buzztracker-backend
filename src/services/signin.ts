@@ -4,21 +4,66 @@ import type { Env } from '..'
 import { sign } from 'hono/jwt'
 import { setCookie } from 'hono/cookie'
 import { Document } from 'firebase-firestore-lite'
+import { createRoute, z } from "@hono/zod-openapi"
 
-export default async (c: Context<Env, "/signin", {
+export const signinRoute = createRoute({
+  method: 'post',
+  path: '/signin',
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            username: z.string().min(1).openapi({ example: 'username' }),
+            password: z.string().min(8).openapi({ example: 'password' })
+          })
+        }
+      }
+    }
+  },
+  responses: {
+    200: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            status: z.literal(true),
+            data: z.object({
+              username: z.string().openapi({ example: 'username' }),
+              email: z.string().email()
+            })
+          })
+        }
+      },
+      description: 'Successfully signed in'
+    },
+    401: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            status: z.literal(false),
+            message: z.string().openapi({ example: 'Username and Password does not match' })
+          })
+        }
+      },
+      description: 'Unauthorized'
+    },
+  }
+})
+
+export async function signin(c: Context<Env, "/signin", {
   out: {
     json: {
       username: string;
       password: string;
     };
   };
-}>) => {
+}>) {
   const db = c.var.db.client
 
   const { username, password } = c.req.valid('json')
   const users = db.ref('users')
   const query = users.query({
-    select: ['username', 'password'],
+    select: ['username', 'email', 'password'],
     where: [
       ['username', '==', username]
     ],
@@ -27,16 +72,14 @@ export default async (c: Context<Env, "/signin", {
   const result: Array<Document> = await query.run()
 
   if (result.length === 0) {
-    c.status(404)
-    return c.json({ status: false, message: 'Username and Password does not match' })
+    return c.json({ status: false, message: 'Username and Password does not match' }, 401)
   }
 
   const user = result[0]
   const [salt, hash] = user.password.split('$')
   const same = hash === scryptSync(password, salt, 64).toString('hex')
   if (!same) {
-    c.status(401)
-    return c.json({ status: false, message: 'Username and Password does not match' })
+    return c.json({ status: false, message: 'Username and Password does not match' }, 401)
   }
 
   const now = Date.now()
@@ -47,5 +90,5 @@ export default async (c: Context<Env, "/signin", {
   }
   const token = await sign(payload, c.env.JWT_SECRET)
   setCookie(c, 'token', token, { httpOnly: true, secure: true, sameSite: 'none' })
-  return c.json({ status: true, data: { username, email: user.email } });
+  return c.json({ status: true, data: { username, email: user.email } }, 200);
 }
