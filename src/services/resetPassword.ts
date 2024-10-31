@@ -13,7 +13,7 @@ export const resetPasswordRoute = createRoute({
                 'application/json': {
                     schema: z.object({
                         email: z.string().email(),
-                        recoveryToken: z.string().length(32)
+                        recoveryToken: z.string().length(32).openapi({ example: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' })
                     })
                 }
             }

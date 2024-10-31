@@ -39,7 +39,7 @@ export const signupRoute = createRoute({
                 'application/json': {
                     schema: z.object({
                         status: z.literal(false),
-                        message: z.string().openapi({ example: 'Username already exists' })
+                        message: z.string().openapi({ example: 'Email already exists' })
                     })
                 }
             },
@@ -64,14 +64,14 @@ export async function signup(c: Context<Env, "/signup", {
     const query = users.query({
         select: ['username', 'email'],
         where: [
-            ['username', '==', username],
+            ['email', '==', email],
         ],
         limit: 1
     })
     const result: Array<Document> = await query.run()
 
     if (result.length > 0) {
-        return c.json({ status: false, message: 'Username already exists' }, 409)
+        return c.json({ status: false, message: 'Email already exists' }, 409)
     }
 
     const salt = randomBytes(16).toString('hex')
