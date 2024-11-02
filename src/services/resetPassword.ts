@@ -7,6 +7,7 @@ import { createRoute, z } from "@hono/zod-openapi";
 export const resetPasswordRoute = createRoute({
     method: 'post',
     path: '/reset-password',
+    tags: ['auth'],
     request: {
         body: {
             content: {
@@ -40,7 +41,7 @@ export const resetPasswordRoute = createRoute({
                 'application/json': {
                     schema: z.object({
                         status: z.literal(false),
-                        message: z.string().openapi({ example: 'Email and Recovery Token does not match' })
+                        message: z.literal('Email and Recovery Token does not match')
                     })
                 }
             }
@@ -70,12 +71,12 @@ export async function resetPassword(c: Context<Env, "/reset-password", {
     const result: Array<Document> = await query.run()
 
     if (result.length === 0) {
-        return c.json({ status: false, message: 'Email and Recovery Token does not match' }, 404)
+        return c.json({ status: false, message: 'Email and Recovery Token does not match' as const }, 404)
     }
 
     const user = result[0]
     if (user.password.split('$')[0] !== recoveryToken) {
-        return c.json({ status: false, message: 'Email and Recovery Token does not match' }, 404)
+        return c.json({ status: false, message: 'Email and Recovery Token does not match' as const }, 404)
     }
 
     const userRef = db.ref(user.__meta__.path)

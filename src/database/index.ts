@@ -1,5 +1,13 @@
 import { SignJWT, importPKCS8 } from 'jose';
 import { Database } from 'firebase-firestore-lite';
+import { createMiddleware } from 'hono/factory';
+import { Env } from '..';
+
+export const setDB = createMiddleware<Env>(async (c, next) => {
+  const db = new DB(c.env.GOOGLE_CLOUD_PROJECT_ID, c.env.GOOGLE_CLOUD_SERVICE_ACCOUNT)
+  c.set('db', db)
+  await next()
+})
 
 export class DB {
   public client: Database

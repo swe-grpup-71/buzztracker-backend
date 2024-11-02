@@ -7,6 +7,7 @@ import { createRoute, z } from "@hono/zod-openapi";
 export const signupRoute = createRoute({
     method: 'post',
     path: '/signup',
+    tags: ['auth'],
     request: {
         body: {
             content: {
@@ -39,7 +40,7 @@ export const signupRoute = createRoute({
                 'application/json': {
                     schema: z.object({
                         status: z.literal(false),
-                        message: z.string().openapi({ example: 'Email already exists' })
+                        message: z.literal('Email already exists')
                     })
                 }
             },
@@ -71,7 +72,7 @@ export async function signup(c: Context<Env, "/signup", {
     const result: Array<Document> = await query.run()
 
     if (result.length > 0) {
-        return c.json({ status: false, message: 'Email already exists' }, 409)
+        return c.json({ status: false, message: 'Email already exists' as const }, 409)
     }
 
     const salt = randomBytes(16).toString('hex')
@@ -79,7 +80,8 @@ export async function signup(c: Context<Env, "/signup", {
     const user = await users.add({
         username,
         email,
-        password: `${salt}$${hash}`
+        password: `${salt}$${hash}`,
+        dengueStatus: false,
     }) as Reference
 
     return c.json({ status: true, data: { recoveryToken: salt } }, 200);

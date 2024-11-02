@@ -9,6 +9,7 @@ import { createRoute, z } from "@hono/zod-openapi"
 export const signinRoute = createRoute({
   method: 'post',
   path: '/signin',
+  tags: ['auth'],
   request: {
     body: {
       content: {
@@ -41,7 +42,7 @@ export const signinRoute = createRoute({
         'application/json': {
           schema: z.object({
             status: z.literal(false),
-            message: z.string().openapi({ example: 'Email and Password does not match' })
+            message: z.literal('Email and Password does not match')
           })
         }
       },
@@ -72,23 +73,28 @@ export async function signin(c: Context<Env, "/signin", {
   const result: Array<Document> = await query.run()
 
   if (result.length === 0) {
-    return c.json({ status: false, message: 'Email and Password does not match' }, 401)
+    return c.json({ status: false, message: 'Email and Password does not match' as const }, 401)
   }
 
   const user = result[0]
   const [salt, hash] = user.password.split('$')
   const same = hash === scryptSync(password, salt, 64).toString('hex')
   if (!same) {
-    return c.json({ status: false, message: 'Email and Password does not match' }, 401)
+    return c.json({ status: false, message: 'Email and Password does not match' as const }, 401)
   }
 
   const now = Date.now()
   const payload = {
-    sub: user.id,
+    sub: user.__meta__.id,
     nbf: Math.floor(now / 1000),
     exp: Math.floor(now / 1000) + 60 * 60 // 1 hour
   }
   const token = await sign(payload, c.env.JWT_SECRET)
-  setCookie(c, 'token', token, { httpOnly: true, secure: true, sameSite: 'none' })
+  setCookie(c, 'token', token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+    expires: new Date(payload.exp * 1000)
+  })
   return c.json({ status: true, data: { username: user.username, email } }, 200);
 }
