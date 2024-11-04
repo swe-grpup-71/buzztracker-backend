@@ -6,5 +6,6 @@ import { Env } from "..";
 export const jwtMiddleware = createMiddleware<Env>(async (c, next) => {
   return jwt({
     secret: c.env.JWT_SECRET,
+    cookie: 'token'
   })(c, next)
 })

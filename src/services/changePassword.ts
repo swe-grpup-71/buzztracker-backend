@@ -8,7 +8,7 @@ export const changePasswordRoute = createRoute({
   method: 'post',
   path: '/change-password',
   tags: ['user'],
-  security: [{ Bearer: [] }],
+  security: [{ cookieAuth: [] }],
   request: {
     body: {
       content: {

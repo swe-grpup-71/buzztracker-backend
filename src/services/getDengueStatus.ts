@@ -7,7 +7,7 @@ export const getDengueStatusRoute = createRoute({
   method: 'get',
   path: '/get-status',
   tags: ['dengue'],
-  security: [{ Bearer: [] }],
+  security: [{ cookieAuth: [] }],
   responses: {
     200: {
       content: {

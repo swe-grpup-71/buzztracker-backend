@@ -7,7 +7,7 @@ export const setDengueStatusRoute = createRoute({
   method: 'post',
   path: '/set-status',
   tags: ['dengue'],
-  security: [{ Bearer: [] }],
+  security: [{ cookieAuth: [] }],
   request: {
     body: {
       content: {

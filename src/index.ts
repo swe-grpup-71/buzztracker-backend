@@ -12,6 +12,7 @@ import { setDengueStatus, setDengueStatusRoute } from './services/setDengueStatu
 import { getDengueCaseRoute, getDengueCase } from './services/getDengueCase'
 import { createDengueCaseRoute, createDengueCase } from './services/createDengueCase'
 import { changePasswordRoute, changePassword } from './services/changePassword'
+import { signOut, signOutRoute } from './services/signout'
 
 
 export type Env = {
@@ -29,9 +30,10 @@ const defaultHook: Hook<any, Env, any, any> = (result, c) => {
 
 const app = new OpenAPIHono<Env>()
 app.use(setDB)
-app.openAPIRegistry.registerComponent('securitySchemes', 'Bearer', {
-  type: 'http',
-  scheme: 'bearer',
+app.openAPIRegistry.registerComponent('securitySchemes', 'cookieAuth', {
+  type: 'apiKey',
+  in: 'cookie',
+  name: 'token'
 })
 
 const auth = new OpenAPIHono<Env>({ defaultHook })
@@ -49,6 +51,7 @@ dengue.openapi(createDengueCaseRoute, createDengueCase)
 const user = new OpenAPIHono<Env>({ defaultHook })
 user.use(jwtMiddleware)
 user.openapi(changePasswordRoute, changePassword)
+user.openapi(signOutRoute, signOut)
 
 app.get('/', swaggerUI({ url: '/doc' }))
 app.doc('/doc', {
