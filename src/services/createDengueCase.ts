@@ -1,6 +1,7 @@
 import { Context } from "hono";
 import { Env } from "..";
 import { createRoute, z } from "@hono/zod-openapi";
+import { Reference } from "firebase-firestore-lite";
 
 
 export const createDengueCaseRoute = createRoute({
@@ -32,7 +33,10 @@ export const createDengueCaseRoute = createRoute({
       content: {
         'application/json': {
           schema: z.object({
-            status: z.literal(true)
+            status: z.literal(true),
+            data: z.object({
+              caseId: z.string().length(20).openapi({ example: 'xxxxxxxxxxxxxxxxxxxx' })
+            })
           })
         }
       },
@@ -64,6 +68,6 @@ export async function createDengueCase(c: Context<Env, "/createDengueCase", {
   const cases = db.ref('cases')
 
   const data = { time: new Date(), symptoms, locations, remarks, userId }
-  await cases.add(data)
-  return c.json({ status: true }, 200)
+  const caseRef = await cases.add(data) as Reference
+  return c.json({ status: true, data: { caseId: caseRef.id } }, 200)
 }

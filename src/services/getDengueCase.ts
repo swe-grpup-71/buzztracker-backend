@@ -14,7 +14,8 @@ export const getDengueCaseRoute = createRoute({
 				'application/json': {
 					schema: z.object({
 						status: z.literal(true),
-						data: z.array(z.object({
+						data: z.object({
+							caseId: z.string().length(20).openapi({ example: 'xxxxxxxxxxxxxxxxxxxx' }),
 							time: z.string().openapi({ example: '2022-01-01T00:00:00.000Z' }),
 							symptoms: z.array(z.string()).openapi({ example: ['fever', 'headache'] }),
 							locations: z.array(z.object({
@@ -25,7 +26,7 @@ export const getDengueCaseRoute = createRoute({
 								})
 							})),
 							remarks: z.string().openapi({ example: 'Remarks' }),
-						}))
+						})
 					})
 				}
 			},
@@ -67,5 +68,6 @@ export async function getDengueCase(c: Context<Env>) {
 
 	delete result[0].userId
 	const data = result[0]
+	data.caseId = result[0].__meta__.id
 	return c.json({ status: true, data }, 200)
 }
