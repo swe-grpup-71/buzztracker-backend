@@ -4,7 +4,7 @@ import { deleteCookie } from "hono/cookie"
 import { createRoute, z } from "@hono/zod-openapi"
 
 
-export const signOutRoute = createRoute({
+export const signoutRoute = createRoute({
   method: 'get',
   path: '/signout',
   tags: ['user'],
@@ -23,7 +23,7 @@ export const signOutRoute = createRoute({
   }
 })
 
-export async function signOut(c: Context<Env>) {
+export async function signout(c: Context<Env>) {
   deleteCookie(c, 'token')
   return c.json({ status: true }, 200)
 }
