@@ -1,6 +1,7 @@
 import { Context } from "hono"
 import { Env } from ".."
 import { createRoute, z } from "@hono/zod-openapi"
+import { Document } from "firebase-firestore-lite"
 
 
 export const getDengueCaseRoute = createRoute({
@@ -14,7 +15,7 @@ export const getDengueCaseRoute = createRoute({
 				'application/json': {
 					schema: z.object({
 						status: z.literal(true),
-						data: z.object({
+						data: z.array(z.object({
 							caseId: z.string().length(20).openapi({ example: 'xxxxxxxxxxxxxxxxxxxx' }),
 							time: z.string().openapi({ example: '2022-01-01T00:00:00.000Z' }),
 							symptoms: z.array(z.string()).openapi({ example: ['fever', 'headache'] }),
@@ -26,7 +27,7 @@ export const getDengueCaseRoute = createRoute({
 								})
 							})),
 							remarks: z.string().openapi({ example: 'Remarks' }),
-						})
+						}))
 					})
 				}
 			},
@@ -57,17 +58,22 @@ export async function getDengueCase(c: Context<Env>) {
 		where: [
 			['userId', '==', userId]
 		],
-		orderBy: { field: 'time', direction: 'desc' },
-		limit: 1
+		orderBy: { field: 'time', direction: 'desc' }
 	})
 
-	const result = await query.run()
+	const result: Array<Document> = await query.run()
 	if (result.length === 0) {
 		return c.json({ status: false, message: 'User dengue case not found' as const }, 404)
 	}
 
-	delete result[0].userId
-	const data = result[0]
-	data.caseId = result[0].__meta__.id
+	const data = result.map((item) => {
+		return {
+			caseId: item.__meta__.id,
+			time: item.time,
+			symptoms: item.symptoms,
+			locations: item.locations,
+			remarks: item.remarks
+		}
+	})
 	return c.json({ status: true, data }, 200)
 }
