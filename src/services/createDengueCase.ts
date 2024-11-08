@@ -8,12 +8,12 @@ export const createDengueCaseRoute = createRoute({
   method: 'post',
   path: '/create-case',
   tags: ['dengue'],
-  security: [{ cookieAuth: [] }],
   request: {
     body: {
       content: {
         'application/json': {
           schema: z.object({
+            userId: z.string(),
             symptoms: z.array(z.string().trim().min(1)).min(1),
             locations: z.array(z.object({
               name: z.string().trim().min(1),
@@ -48,6 +48,7 @@ export const createDengueCaseRoute = createRoute({
 export async function createDengueCase(c: Context<Env, "/createDengueCase", {
   out: {
     json: {
+      userId: string;
       symptoms: string[];
       locations: {
         name: string;
@@ -60,11 +61,9 @@ export async function createDengueCase(c: Context<Env, "/createDengueCase", {
     };
   };
 }>) {
-  const jwtPayload = c.get('jwtPayload')
-  const userId = jwtPayload.sub
   const db = c.var.db.client
 
-  const { symptoms, locations, remarks } = c.req.valid('json')
+  const { userId, symptoms, locations, remarks } = c.req.valid('json')
   const cases = db.ref('cases')
 
   const data = { time: new Date(), symptoms, locations, remarks, userId }

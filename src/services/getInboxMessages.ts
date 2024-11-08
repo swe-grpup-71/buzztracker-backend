@@ -7,7 +7,11 @@ export const getInboxMessagesRoute = createRoute({
   method: 'get',
   path: '/get-messages',
   tags: ['inbox'],
-  security: [{ cookieAuth: [] }],
+  request: {
+    query: z.object({
+      userId: z.string()
+    }),
+  },
   responses: {
     200: {
       content: {
@@ -30,9 +34,14 @@ export const getInboxMessagesRoute = createRoute({
   }
 })
 
-export async function getInboxMessages(c: Context<Env>) {
-  const jwtPayload = c.get('jwtPayload')
-  const userId = jwtPayload.sub
+export async function getInboxMessages(c: Context<Env, '/get-messages', {
+  out: {
+    query: {
+      userId: string;
+    };
+  };
+}>) {
+  const { userId } = c.req.valid("query")
   const db = c.var.db.client
 
   const messages = db.ref('messages')

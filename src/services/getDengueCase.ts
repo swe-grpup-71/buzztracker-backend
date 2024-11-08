@@ -8,7 +8,11 @@ export const getDengueCaseRoute = createRoute({
 	method: 'get',
 	path: '/get-case',
 	tags: ['dengue'],
-	security: [{ cookieAuth: [] }],
+	request: {
+		query: z.object({
+			userId: z.string()
+		}),
+	},
 	responses: {
 		200: {
 			content: {
@@ -47,9 +51,14 @@ export const getDengueCaseRoute = createRoute({
 	}
 })
 
-export async function getDengueCase(c: Context<Env>) {
-	const jwtPayload = c.get('jwtPayload')
-	const userId = jwtPayload.sub
+export async function getDengueCase(c: Context<Env, '/get-case', {
+	out: {
+		query: {
+			userId: string;
+		};
+	};
+}>) {
+	const { userId } = c.req.valid('query')
 	const db = c.var.db.client
 
 	const cases = db.ref('cases')

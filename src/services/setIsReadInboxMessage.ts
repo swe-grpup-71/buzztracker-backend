@@ -13,6 +13,7 @@ export const setIsReadInboxMessageRoute = createRoute({
       content: {
         'application/json': {
           schema: z.object({
+            userId: z.string(),
             messageId: z.string().length(20).openapi({ example: 'xxxxxxxxxxxxxxxxxxxx' }),
             isRead: z.boolean()
           })
@@ -48,16 +49,15 @@ export const setIsReadInboxMessageRoute = createRoute({
 export async function setIsReadInboxMessage(c: Context<Env, "/set-isread-message", {
   out: {
     json: {
+      userId: string;
       messageId: string;
       isRead: boolean;
     };
   };
 }>) {
-  const jwtPayload = c.get('jwtPayload')
-  const userId = jwtPayload.sub
   const db = c.var.db.client
 
-  const { messageId, isRead } = c.req.valid('json')
+  const { userId, messageId, isRead } = c.req.valid('json')
   const messageRef = db.ref(`messages/${messageId}`)
 
   var message

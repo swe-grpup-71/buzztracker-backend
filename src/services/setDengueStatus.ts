@@ -7,12 +7,12 @@ export const setDengueStatusRoute = createRoute({
   method: 'post',
   path: '/set-status',
   tags: ['dengue'],
-  security: [{ cookieAuth: [] }],
   request: {
     body: {
       content: {
         'application/json': {
           schema: z.object({
+            userId: z.string(),
             dengueStatus: z.literal('positive').or(z.literal('negative'))
           })
         }
@@ -36,18 +36,17 @@ export const setDengueStatusRoute = createRoute({
 export async function setDengueStatus(c: Context<Env, "/set-status", {
   out: {
     json: {
+      userId: string;
       dengueStatus: string;
     };
   };
 }>) {
-  const jwtPayload = c.get('jwtPayload')
-  const userId = jwtPayload.sub
   const db = c.var.db.client
 
-  const { dengueStatus } = c.req.valid('json')
+  const { dengueStatus, userId } = c.req.valid('json')
   const status = dengueStatus === 'positive' ? true : false
   const userRef = db.ref(`users/${userId}`)
-  await userRef.update({ dengueStatus: status })
+  await userRef.set({ dengueStatus: status })
 
   return c.json({ status: true }, 200)
 }

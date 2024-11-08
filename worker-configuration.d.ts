@@ -3,5 +3,4 @@
 interface CloudflareBindings {
 	GOOGLE_CLOUD_PROJECT_ID: string;
 	GOOGLE_CLOUD_SERVICE_ACCOUNT: string;
-	JWT_SECRET: string;
 }
