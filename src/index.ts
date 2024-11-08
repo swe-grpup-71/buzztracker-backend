@@ -10,6 +10,7 @@ import { getDengueCaseRoute, getDengueCase } from './services/getDengueCase'
 import { createDengueCaseRoute, createDengueCase } from './services/createDengueCase'
 
 import { getInboxMessagesRoute, getInboxMessages } from './services/getInboxMessages'
+import { createInboxMessagesRoute, createInboxMessages } from "./services/createInboxMessages";
 import { setIsReadInboxMessage, setIsReadInboxMessageRoute } from './services/setIsReadInboxMessage'
 
 
@@ -39,6 +40,7 @@ dengue.openapi(createDengueCaseRoute, createDengueCase)
 
 const inbox = new OpenAPIHono<Env>({ defaultHook })
 inbox.openapi(getInboxMessagesRoute, getInboxMessages)
+inbox.openapi(createInboxMessagesRoute, createInboxMessages)
 inbox.openapi(setIsReadInboxMessageRoute, setIsReadInboxMessage)
 // inbox.openapi(readAllInboxMessagesRoute, readAllInboxMessages)
 // inbox.openapi(deleteInboxMessageRoute, deleteInboxMessage)
