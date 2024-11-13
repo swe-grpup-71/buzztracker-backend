@@ -18,8 +18,8 @@ export const createDengueCaseRoute = createRoute({
             locations: z.array(z.object({
               name: z.string().trim().min(1),
               coordinates: z.object({
-                latitude: z.number(),
-                longitude: z.number()
+                latitude: z.number().min(-90).max(90),
+                longitude: z.number().min(-180).max(180)
               })
             })).min(1),
             remarks: z.string()
