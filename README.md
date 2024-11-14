@@ -8,7 +8,7 @@ If you want to try on this project, please ensure that you have the following:
 2. **JSON private key** for a Google Cloud Service Account with appropriate permissions (ref: https://blog.cloudflare.com/api-at-the-edge-workers-and-firestore/#building-the-api)
 3. [Cloudflare account](https://dash.cloudflare.com/)
 4. A Cloudflare Workers named `buzztracker-backend`
-5. Configure secrets for the Cloudflare Workers and a `.dev.vars` file at the root directory of the project in the following format:
+5. Configure secrets of the Cloudflare Workers and create a `.dev.vars` file at the root directory of the project in the following format:
 ```
 GOOGLE_CLOUD_PROJECT_ID=your-google-cloud-project-id
 GOOGLE_CLOUD_SERVICE_ACCOUNT=your-flattened-json-private-key-for-the-service-account
