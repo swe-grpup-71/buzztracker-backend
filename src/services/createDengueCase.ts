@@ -66,7 +66,7 @@ export async function createDengueCase(c: Context<Env, "/createDengueCase", {
   const { userId, symptoms, locations, remarks } = c.req.valid('json')
   const cases = db.ref('cases')
 
-  const data = { time: new Date(), symptoms, locations, remarks, userId }
+  const data = { userId, time: new Date(), symptoms, locations, remarks }
   const caseRef = await cases.add(data) as Reference
   return c.json({ status: true, data: { caseId: caseRef.id } }, 200)
 }
