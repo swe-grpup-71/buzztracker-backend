@@ -30,8 +30,6 @@ const defaultHook: Hook<any, Env, any, any> = (result, c) => {
 const app = new OpenAPIHono<Env>()
 app.use(setDB)
 
-const auth = new OpenAPIHono<Env>({ defaultHook })
-
 const dengue = new OpenAPIHono<Env>({ defaultHook })
 dengue.openapi(getDengueStatusRoute, getDengueStatus)
 dengue.openapi(setDengueStatusRoute, setDengueStatus)
@@ -42,9 +40,6 @@ const inbox = new OpenAPIHono<Env>({ defaultHook })
 inbox.openapi(getInboxMessagesRoute, getInboxMessages)
 inbox.openapi(createInboxMessagesRoute, createInboxMessages)
 inbox.openapi(setIsReadInboxMessageRoute, setIsReadInboxMessage)
-// inbox.openapi(readAllInboxMessagesRoute, readAllInboxMessages)
-// inbox.openapi(deleteInboxMessageRoute, deleteInboxMessage)
-// inbox.openapi(deleteAllInboxMessagesRoute, deleteAllInboxMessages)
 
 app.get('/', swaggerUI({ url: '/doc' }))
 app.doc('/doc', {
@@ -54,7 +49,6 @@ app.doc('/doc', {
   },
   openapi: '3.1.0'
 })
-app.route('/auth', auth)
 app.route('/dengue', dengue)
 app.route('/inbox', inbox)
 
